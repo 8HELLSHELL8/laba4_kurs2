@@ -142,14 +142,14 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
 void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year) 
 {
     auto start = chrono::high_resolution_clock::now(); // таймер начала
-    int counter = 0;
+    atomic<int> counter = 0;
 
     vector<jthread> threads;
     mutex mtx;
     int sizeOfList = cars.size();
     
     
-    auto processRange = [&cars, minCost, maxCost, maxMiles, year, mtx](int start, int end) 
+    auto processRange = [&cars, minCost, maxCost, maxMiles, year, &mtx](int start, int end) 
     {
         for (int i = start; i < end; i++) 
         {
@@ -192,7 +192,7 @@ int main()
     vector<Car> carStore = randomize(10);
     printAllCars(carStore);
     chooseCar(carStore, 10000, 50000, 9999999,2000);
-    multiChooseCar(carStore,3,10000,50000,9999999,2000,2000);
+    multiChooseCar(carStore,3,10000,50000,9999999,2000);
 
 
     return 0;
