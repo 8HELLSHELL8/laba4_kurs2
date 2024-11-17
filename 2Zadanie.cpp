@@ -127,10 +127,11 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
             car.mileage <= maxMiles && car.manufatured >= year)         
         {
             cout << "Brand: " << car.brand
-             << ", Cost: " << car.cost
-             << ", Mileage: " << car.mileage
-             << ", Type: " << car.type
-             << ", Manufactured: " << car.manufatured << endl;
+            << ", Cost: " << car.cost
+            << ", Mileage: " << car.mileage
+            << ", Type: " << car.type
+            << ", Manufactured: " << car.manufatured << endl;
+            counter++;
         }
     }
     cout << "Have found " << counter << " cars for you!" << endl;
@@ -139,32 +140,36 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
     cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
     cout << "------------------------------------------------------" << endl;
 }
-
+mutex mtx;
 void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year) 
 {
     auto start = chrono::high_resolution_clock::now(); // таймер начала
     atomic<int> counter = 0;
 
     vector<jthread> threads;
-    mutex mtx;
+    
     int sizeOfList = cars.size();
     
     
-    auto processRange = [&cars, minCost, maxCost, maxMiles, year, &mtx, &counter](int start, int end) 
+    auto processRange = [&](int start, int end) 
     {
+        int localCounter = 0;
         for (int i = start; i < end; i++) 
         {
             const Car& car = cars[i];
             if (car.cost >= minCost && car.cost <= maxCost &&
                 car.mileage <= maxMiles && car.manufatured >= year) 
                 {
+                    localCounter++;
                     {
                         lock_guard<mutex> lock(mtx);
-                        cout << "Found car: Cost=" << car.cost << ", Miles=" << car.mileage << ", Year=" << car.manufatured << '\n';
+                        cout << "Found car: Cost: " << car.cost << ", Miles: " << car.mileage << ", Year: " << car.manufatured << '\n';
+                        
                     }
                 }
-                counter++;
+                
         }
+        counter += localCounter;
     };
 
 
@@ -175,12 +180,12 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
 
         if (start >= sizeOfList) break; // Если старт за пределами массива, завершаем
 
-        threads.emplace_back([=,&processRange](){processRange(start, end);});
+        threads.emplace_back([=,&processRange](){processRange(start, end); this_thread::sleep_for(chrono::microseconds(100));});
     }
 
     {
         lock_guard<mutex> lock(mtx);
-        cout << "Have found " << counter.load() << " cars for you!" << endl;
+        cout << "Have found " << counter << " cars for you!" << endl;
         auto end = chrono::high_resolution_clock::now(); 
         chrono::duration<double> duration = end - start; 
         cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
@@ -190,8 +195,7 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
 
 int main()
 {
-    vector<Car> carStore = randomize(2);
-    printAllCars(carStore);
+    vector<Car> carStore = randomize(100);
 
     cout << "Single-threaded selection:" << endl;
     chooseCar(carStore, 10000, 50000, 9999999, 2000);
