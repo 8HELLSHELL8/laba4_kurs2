@@ -139,26 +139,50 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
     cout << "------------------------------------------------------" << endl;
 }
 
-void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year)
+void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year) 
 {
+    auto start = chrono::high_resolution_clock::now(); // таймер начала
+    int counter = 0;
+
     vector<jthread> threads;
+    mutex mtx;
     int sizeOfList = cars.size();
-    for (int i = 0; i < amountOfThreads; i++)
+    
+    
+    auto processRange = [&cars, minCost, maxCost, maxMiles, year, mtx](int start, int end) 
     {
-        int start = 0;
-        int step = sizeOfList / amountOfThreads;
-        int end = start + step;
-        threads.push_back(jthread([&start, &end, &step]()
+        for (int i = start; i < end; i++) 
         {
-            for (int start = 0; start < end; start++)
-            {
-                
-                end = start;
-            }
+            const Car& car = cars[i];
+            if (car.cost >= minCost && car.cost <= maxCost &&
+                car.mileage <= maxMiles && car.manufatured >= year) 
+                {
+                    {
+                        lock_guard<mutex> lock(mtx);
+                        cout << "Found car: Cost=" << car.cost << ", Miles=" << car.mileage << ", Year=" << car.manufatured << '\n';
+                    }
+                }
+        }
+    };
 
 
+    int step = (sizeOfList + amountOfThreads - 1) / amountOfThreads; // Округляем вверх
+    for (int i = 0; i < amountOfThreads; i++) {
+        int start = i * step;
+        int end = min(start + step, sizeOfList); // Последний диапазон может быть короче
 
-        }));
+        if (start >= sizeOfList) break; // Если старт за пределами массива, завершаем
+
+        threads.emplace_back(processRange, start, end, ref(mtx));
+    }
+
+    {
+        lock_guard<mutex> lock(mtx);
+        cout << "Have found " << counter << " cars for you!" << endl;
+        auto end = chrono::high_resolution_clock::now(); 
+        chrono::duration<double> duration = end - start; 
+        cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
+        cout << "------------------------------------------------------" << endl;
     }
 }
 
@@ -167,7 +191,8 @@ int main()
 
     vector<Car> carStore = randomize(10);
     printAllCars(carStore);
-    
+    chooseCar(carStore, 10000, 50000, 9999999,2000);
+    //multiChooseCar(carStore,3,10000,50000,9999999,2000,2000);
 
 
     return 0;
