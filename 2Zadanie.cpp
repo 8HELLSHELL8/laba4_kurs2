@@ -42,16 +42,11 @@ enum class TYPE
 };
 
 
-string randomBrand()
-{
-    return;
-}
-
 string randomType()
 {
     random_device rd;
     mt19937 gen(rd());
-    uniform_int_distribution<int> dist(TYPE::sedan,coupe,hatchback,van,sv);
+    uniform_int_distribution<int> dist(sedan,coupe,hatchback,van,sv);
 
 
     switch (dist(gen))
@@ -67,7 +62,7 @@ string randomType()
 string randomBrand() {
     static random_device rd;
     static mt19937 gen(rd());
-    static uniform_int_distribution<int> dist(mercedes, toyota);
+    static uniform_int_distribution<int> dist(mercedes, toyota, audi, volkswagen, bmw);
 
     switch (dist(gen)) {
         case mercedes: return "Mercedes";
@@ -100,18 +95,9 @@ vector<Car> randomize(int amountOfCars)
         cars.emplace_back(brand, cost, miles, type, year);
     }
 
-
-
-
     return cars;
 }
 
-
-
-// vector<Car> randomize(int amountOfCars)
-// {
-    
-// }
 
 int main()
 {
