@@ -140,62 +140,66 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
     cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
     cout << "------------------------------------------------------" << endl;
 }
+
 mutex mtx;
-void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year) 
+
+void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year)
 {
-    auto start = chrono::high_resolution_clock::now(); // таймер начала
+    auto start = chrono::high_resolution_clock::now(); // Таймер начала
     atomic<int> counter = 0;
 
-    vector<jthread> threads;
-    
+    vector<thread> threads;
     int sizeOfList = cars.size();
-    
-    
-    auto processRange = [&](int start, int end) 
+
+    auto processRange = [&](int start, int end)
     {
         int localCounter = 0;
-        for (int i = start; i < end; i++) 
+        for (int i = start; i < end; i++)
         {
             const Car& car = cars[i];
             if (car.cost >= minCost && car.cost <= maxCost &&
-                car.mileage <= maxMiles && car.manufatured >= year) 
+                car.mileage <= maxMiles && car.manufatured >= year)
+            {
+                localCounter++;
                 {
-                    localCounter++;
-                    {
-                        lock_guard<mutex> lock(mtx);
-                        cout << "Found car: Cost: " << car.cost << ", Miles: " << car.mileage << ", Year: " << car.manufatured << '\n';
-                        
-                    }
+                    lock_guard<mutex> lock(mtx);
+                    cout << "Found car: Cost: " << car.cost << ", Miles: " << car.mileage << ", Year: " << car.manufatured << '\n';
                 }
-                
+            }
         }
         counter += localCounter;
     };
 
-
     int step = (sizeOfList + amountOfThreads - 1) / amountOfThreads; // Округляем вверх
-    for (int i = 0; i < amountOfThreads; i++) {
+
+    for (int i = 0; i < amountOfThreads; i++)
+    {
         int start = i * step;
         int end = min(start + step, sizeOfList); // Последний диапазон может быть короче
 
         if (start >= sizeOfList) break; // Если старт за пределами массива, завершаем
 
-        threads.emplace_back([=,&processRange](){processRange(start, end); this_thread::sleep_for(chrono::microseconds(100));});
+        threads.emplace_back([=]() { processRange(start, end); });
+    }
+
+    // Ожидание завершения всех потоков
+    for (auto& t : threads)
+    {
+        t.join();
     }
 
     {
         lock_guard<mutex> lock(mtx);
-        cout << "Have found " << counter << " cars for you!" << endl;
-        auto end = chrono::high_resolution_clock::now(); 
-        chrono::duration<double> duration = end - start; 
-        cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
-        cout << "------------------------------------------------------" << endl;
+        cout << "Found " << counter.load() << " cars!" << endl;
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double> duration = end - start;
+        cout << "Time taken: " << duration.count() << " seconds" << endl;
     }
 }
 
 int main()
 {
-    vector<Car> carStore = randomize(100);
+    vector<Car> carStore = randomize(10000);
 
     cout << "Single-threaded selection:" << endl;
     chooseCar(carStore, 10000, 50000, 9999999, 2000);
