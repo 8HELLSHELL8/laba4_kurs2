@@ -63,7 +63,8 @@ string randomType()
     return "";
 }
 
-string randomBrand() {
+string randomBrand() 
+{
     static random_device rd;
     static mt19937 gen(rd());
     static uniform_int_distribution<int> dist(0, 4);
@@ -141,11 +142,19 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
 void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year)
 {
     vector<jthread> threads;
+    int sizeOfList = cars.size();
     for (int i = 0; i < amountOfThreads; i++)
     {
-        threads.push_back(jthread([]()
+        int start = 0;
+        int step = sizeOfList / amountOfThreads;
+        int end = start + step;
+        threads.push_back(jthread([&start, &end, &step]()
         {
-
+            for (int start = 0; start < end; start++)
+            {
+                
+                end = start;
+            }
 
 
 
