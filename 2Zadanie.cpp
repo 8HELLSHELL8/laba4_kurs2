@@ -2,7 +2,9 @@
 #include <vector>
 #include <memory>
 #include <random>
+#include <chrono>
 #include <string>
+#include <thread>
 using namespace std;
 
 struct Car
@@ -46,32 +48,36 @@ string randomType()
 {
     random_device rd;
     mt19937 gen(rd());
-    uniform_int_distribution<int> dist(sedan,coupe,hatchback,van,sv);
+    uniform_int_distribution<int> dist(0, 4);
 
 
-    switch (dist(gen))
+    switch (static_cast<TYPE>(dist(gen)))
     {
-    case sedan: return "Sedan";
-    case coupe: return "Coupe";
-    case hatchback: return "Hatchback";
-    case van: return "Van";
-    case sv: return "Sv";
+    case TYPE::sedan: return "Sedan";
+    case TYPE::coupe: return "Coupe";
+    case TYPE::hatchback: return "Hatchback";
+    case TYPE::van: return "Van";
+    case TYPE::sv: return "Sv";
+    default: return "";
     }
+    return "";
 }
 
 string randomBrand() {
     static random_device rd;
     static mt19937 gen(rd());
-    static uniform_int_distribution<int> dist(mercedes, toyota, audi, volkswagen, bmw);
+    static uniform_int_distribution<int> dist(0, 4);
 
-    switch (dist(gen)) {
-        case mercedes: return "Mercedes";
-        case audi: return "Audi";
-        case volkswagen: return "Volkswagen";
-        case bmw: return "BMW";
-        case toyota: return "Toyota";
-        default: return "Unknown";
+    switch (static_cast<BRAND>(dist(gen))) 
+    {
+        case BRAND::mercedes: return "Mercedes";
+        case BRAND::audi: return "Audi";
+        case BRAND::volkswagen: return "Volkswagen";
+        case BRAND::bmw: return "BMW";
+        case BRAND::toyota: return "Toyota";
+        default: return "";
     }
+    return "";
 }
 
 vector<Car> randomize(int amountOfCars)
@@ -98,10 +104,62 @@ vector<Car> randomize(int amountOfCars)
     return cars;
 }
 
+void printAllCars(vector<Car> Cars)
+{
+    for (const auto& car : Cars) 
+    {
+        cout << "Brand: " << car.brand
+             << ", Cost: " << car.cost
+             << ", Mileage: " << car.mileage
+             << ", Type: " << car.type
+             << ", Manufactured: " << car.manufatured << endl;
+    }
+}
+
+void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, int year)
+{
+    auto start = chrono::high_resolution_clock::now(); // таймер начала
+    int counter = 0;
+    for (const auto& car : cars)
+    {
+        if (minCost <= car.cost && car.cost <= maxCost && car.mileage <= maxMiles && year <= car.manufatured)
+        {
+            cout << "Brand: " << car.brand
+             << ", Cost: " << car.cost
+             << ", Mileage: " << car.mileage
+             << ", Type: " << car.type
+             << ", Manufactured: " << car.manufatured << endl;
+        }
+    }
+    cout << "Have found " << counter << " cars for you!" << endl;
+    auto end = chrono::high_resolution_clock::now(); 
+    chrono::duration<double> duration = end - start; 
+    cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
+    cout << "------------------------------------------------------" << endl;
+}
+
+void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, int maxCost, int maxMiles, int year)
+{
+    vector<jthread> threads;
+    for (int i = 0; i < amountOfThreads; i++)
+    {
+        threads.push_back(jthread([]()
+        {
+
+
+
+
+        }));
+    }
+}
 
 int main()
 {
 
-    vector<Car> carStore;
+    vector<Car> carStore = randomize(10);
+    printAllCars(carStore);
+    
+
+
     return 0;
 }
