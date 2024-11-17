@@ -173,7 +173,7 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
 
         if (start >= sizeOfList) break; // Если старт за пределами массива, завершаем
 
-        threads.emplace_back(processRange, start, end, ref(mtx));
+        threads.emplace_back(processRange, start, end, mtx);
     }
 
     {
@@ -192,7 +192,7 @@ int main()
     vector<Car> carStore = randomize(10);
     printAllCars(carStore);
     chooseCar(carStore, 10000, 50000, 9999999,2000);
-    //multiChooseCar(carStore,3,10000,50000,9999999,2000,2000);
+    multiChooseCar(carStore,3,10000,50000,9999999,2000,2000);
 
 
     return 0;
