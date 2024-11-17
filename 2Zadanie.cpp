@@ -123,7 +123,8 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
     int counter = 0;
     for (const auto& car : cars)
     {
-        if (minCost <= car.cost && car.cost <= maxCost && car.mileage <= maxMiles && year <= car.manufatured)
+        if (car.cost >= minCost && car.cost <= maxCost &&
+            car.mileage <= maxMiles && car.manufatured >= year)         
         {
             cout << "Brand: " << car.brand
              << ", Cost: " << car.cost
@@ -149,7 +150,7 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
     int sizeOfList = cars.size();
     
     
-    auto processRange = [&cars, minCost, maxCost, maxMiles, year, &mtx](int start, int end) 
+    auto processRange = [&cars, minCost, maxCost, maxMiles, year, &mtx, &counter](int start, int end) 
     {
         for (int i = start; i < end; i++) 
         {
@@ -162,6 +163,7 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
                         cout << "Found car: Cost=" << car.cost << ", Miles=" << car.mileage << ", Year=" << car.manufatured << '\n';
                     }
                 }
+                counter++;
         }
     };
 
@@ -173,12 +175,12 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
 
         if (start >= sizeOfList) break; // Если старт за пределами массива, завершаем
 
-        threads.emplace_back(processRange, start, end, mtx);
+        threads.emplace_back([=,&processRange](){processRange(start, end);});
     }
 
     {
         lock_guard<mutex> lock(mtx);
-        cout << "Have found " << counter << " cars for you!" << endl;
+        cout << "Have found " << counter.load() << " cars for you!" << endl;
         auto end = chrono::high_resolution_clock::now(); 
         chrono::duration<double> duration = end - start; 
         cout << "Selecting worked for " << duration.count() << "seconds!" << endl;
@@ -188,12 +190,14 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
 
 int main()
 {
-
-    vector<Car> carStore = randomize(10);
+    vector<Car> carStore = randomize(2);
     printAllCars(carStore);
-    chooseCar(carStore, 10000, 50000, 9999999,2000);
-    multiChooseCar(carStore,3,10000,50000,9999999,2000);
 
+    cout << "Single-threaded selection:" << endl;
+    chooseCar(carStore, 10000, 50000, 9999999, 2000);
+
+    cout << "Multi-threaded selection:" << endl;
+    multiChooseCar(carStore, 3, 10000, 50000, 9999999, 2000);
 
     return 0;
 }
