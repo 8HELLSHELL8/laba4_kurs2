@@ -38,7 +38,7 @@ void philosopher(int id) {
             lock_guard<mutex> lock(output_mutex); // забираем мьютексом вывод
             cout << "Философ " << id << " начал есть.\n"; // Изменено сообщение
         }
-        this_thread::sleep_for(chrono::milliseconds(5000));
+        //this_thread::sleep_for(chrono::milliseconds(1000));
 
         // Философ освобождает вилки (выйдет из области видимости, и вилки будут освобождены)
         {

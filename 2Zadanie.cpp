@@ -126,11 +126,11 @@ void chooseCar(const vector<Car>& cars, int minCost, int maxCost, int maxMiles, 
         if (car.cost >= minCost && car.cost <= maxCost &&
             car.mileage <= maxMiles && car.manufatured >= year)         
         {
-            cout << "Brand: " << car.brand
-            << ", Cost: " << car.cost
-            << ", Mileage: " << car.mileage
-            << ", Type: " << car.type
-            << ", Manufactured: " << car.manufatured << endl;
+            // cout << "Brand: " << car.brand
+            // << ", Cost: " << car.cost
+            // << ", Mileage: " << car.mileage
+            // << ", Type: " << car.type
+            // << ", Manufactured: " << car.manufatured << endl;
             counter++;
         }
     }
@@ -161,10 +161,10 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
                 car.mileage <= maxMiles && car.manufatured >= year)
             {
                 localCounter++;
-                {
-                    lock_guard<mutex> lock(mtx);
-                    cout << "Found car: Cost: " << car.cost << ", Miles: " << car.mileage << ", Year: " << car.manufatured << '\n';
-                }
+                // {
+                //     lock_guard<mutex> lock(mtx);
+                //     cout << "Found car: Cost: " << car.cost << ", Miles: " << car.mileage << ", Year: " << car.manufatured << '\n';
+                // }
             }
         }
         counter += localCounter;
@@ -182,11 +182,6 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
         threads.emplace_back([=]() { processRange(start, end); });
     }
 
-    // Ожидание завершения всех потоков
-    for (auto& t : threads)
-    {
-        t.join();
-    }
 
     {
         lock_guard<mutex> lock(mtx);
@@ -199,13 +194,13 @@ void multiChooseCar(const vector<Car>& cars, int amountOfThreads, int minCost, i
 
 int main()
 {
-    vector<Car> carStore = randomize(10000);
+    vector<Car> carStore = randomize(100000);
 
     cout << "Single-threaded selection:" << endl;
     chooseCar(carStore, 10000, 50000, 9999999, 2000);
 
     cout << "Multi-threaded selection:" << endl;
-    multiChooseCar(carStore, 3, 10000, 50000, 9999999, 2000);
+    multiChooseCar(carStore, 6, 10000, 50000, 9999999, 2000);
 
     return 0;
 }

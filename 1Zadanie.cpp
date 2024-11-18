@@ -58,7 +58,8 @@ void mutexTesting(int numberOfThreads)
         {
             {
                 mtx.lock();
-                cout << "Мьютекс заблокировался -> "; 
+                cout << this_thread::get_id() << " " << generateRandomSymbol();
+                cout << " Мьютекс заблокировался -> "; 
                 cout << " Общий ресурс использовался -> ";
                 mtx.unlock();
                 cout << " Мьютекс разблокировался" << endl;
@@ -92,7 +93,8 @@ void semaphoreTesting(int numberOfThreads)
             semaphore.acquire();
             {
                 lock_guard<mutex> lock(mtx);
-                cout << "Схватили семафор ->";
+                cout << this_thread::get_id() << " " << generateRandomSymbol();
+                cout << " Схватили семафор ->";
                 cout << " Использование общих ресурсов ->";
                 cout << " Освободили семафор" << endl;
             }
@@ -117,7 +119,7 @@ void semaphoreSlimTesting(int numOfThreads)
     auto start = chrono::high_resolution_clock::now(); // таймер начала
 
     vector<jthread> threads;
-    counting_semaphore<1> semaphore(1); //пропускает 3 потока одновременно
+    counting_semaphore<1> semaphore(1); 
 
     for (int i = 0; i < numOfThreads; i++)
     {
@@ -126,6 +128,7 @@ void semaphoreSlimTesting(int numOfThreads)
             semaphore.acquire();
             {
                 lock_guard<mutex> lock(mtx);
+                cout << this_thread::get_id() << " " << generateRandomSymbol();
                 cout << "Схватили семафор ->";
                 cout << " Использование общих ресурсов ->";
                 cout << " Освободили семафор" << endl;
@@ -160,12 +163,12 @@ void barrierTesting(int numOfThreads)
         {
             {
                 lock_guard<mutex> lock(mtx);
-                cout << "Барьер был достинут" << endl;
+                cout << "Барьер был достинут поток " << this_thread::get_id() << " случайный символ " << generateRandomSymbol() << endl;
             }
             barrierLock.arrive_and_wait();
             {
                 lock_guard<mutex> lock(mtx);
-                cout << "Барьер был пройден" << endl;
+                cout << "Барьер был пройден" << this_thread::get_id() << endl;
             }
         }));
     }
@@ -186,9 +189,10 @@ void barrierTesting(int numOfThreads)
 class Spinlock
 {
 private:
-    std::atomic_flag atomic_flag = ATOMIC_FLAG_INIT;
+    atomic_flag atomic_flag = ATOMIC_FLAG_INIT;
 
 public:
+
     void lock()
     {
        while (atomic_flag.test_and_set(std::memory_order_acquire)){}
@@ -213,9 +217,9 @@ void spinLockTesting(int numOfThreads)
             slock.lock();
             {
                 lock_guard<mutex> lock(mtx);
-                cout << "Схватили лок ->";
-                cout << " Использование общих ресурсов ->";
-                cout << " Освободили лок" << endl;
+                cout << this_thread::get_id() << " случайный символ " << generateRandomSymbol() << " Схватили лок ->";
+                cout << " Использование общих ресурсов -> ";
+                cout << this_thread::get_id() << " Освободили лок" << endl;
             }
             slock.unlock();
         }));
@@ -267,9 +271,9 @@ void spinWaitTesting(int numOfThreads)
             swlock.lock();
             {
                 lock_guard<mutex> lock(mtx);
-                cout << "Схватили лок ->";
-                cout << " Использование общих ресурсов ->";
-                cout << " Освободили лок" << endl;
+                cout << this_thread::get_id() << " случайный символ " << generateRandomSymbol() << " Схватили лок ->";
+                cout << " Использование общих ресурсов -> ";
+                cout << this_thread::get_id() <<" Освободили лок" << endl;
             }
             swlock.unlock();
         }));
